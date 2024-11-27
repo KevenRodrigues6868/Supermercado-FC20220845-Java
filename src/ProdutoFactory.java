@@ -8,7 +8,7 @@ public class ProdutoFactory {
             case 3: // Eletroeletrônico
                 return new Eletroeletronicos(name, codigo, valor, garantia);
             default:
-                throw new IllegalArgumentException("Valor Inserido Invalido");
+                throw new IllegalArgumentException("Tipo de produto inválido.");
         }
     }
 }

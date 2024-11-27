@@ -1,10 +1,18 @@
 public class Alimento extends Produto {
-    String validadeAlimento;
+    private String validadeAlimento;
 
     public Alimento(String name, int codigo, float valor, String validadeAlimento) {
-        this.name = name;
-        this.codigo = codigo;
-        this.valor = valor;
+        super(name, codigo, valor);
         this.validadeAlimento = validadeAlimento;
+    }
+
+    @Override
+    public void exibirDetalhes() {
+        System.out.println("Validade: " + validadeAlimento);  // Exibe a validade do alimento
+    }
+
+    @Override
+    public String getValidade() {
+        return validadeAlimento;  // Retorna a validade do alimento
     }
 }

@@ -9,7 +9,6 @@ public class Terminal {
         System.out.println("2 - Abrir Nova Venda: ");
         System.out.println("3 - Financeiro:");
         System.out.println("4 - Sair");
-        System.out.println("5 - Fechar Caixa"); // Nova opção para fechar o caixa
         return Console.readNumber("Escolha uma opção: ");
     }
 

@@ -1,28 +1,46 @@
 import java.util.ArrayList;
 
 public class Compra {
-    private ArrayList<Produto> itens;
-    private float valorTotal;
+    private ArrayList<Produto> produtos;
 
     public Compra() {
-        itens = new ArrayList<>();
-        valorTotal = 0;
+        produtos = new ArrayList<>();
     }
 
+    // Método para adicionar um produto ao carrinho
     public void addProduto(Produto produto) {
-        itens.add(produto);
-        valorTotal += produto.calcValor();
+        produtos.add(produto);
     }
 
-    public void mostrarCompra() {
-        System.out.println("Itens da Compra:");
-        for (Produto p : itens) {
-            System.out.println(p);
+    // Método para remover um produto do carrinho
+    public void removerProduto(Produto produto) {
+        produtos.remove(produto);
+    }
+
+    // Método para buscar um produto no carrinho por código
+    public Produto getProdutoPorCodigo(int codigo) {
+        for (Produto p : produtos) {
+            if (p.getCodigo() == codigo) {
+                return p;
+            }
         }
-        System.out.println("Valor total da compra: R$ " + valorTotal);
+        return null; // Retorna null se não encontrar o produto no carrinho
     }
 
+    // Método para exibir os produtos no carrinho
+    public void mostrarCompra() {
+        System.out.println("Produtos no carrinho:");
+        for (Produto p : produtos) {
+            System.out.println(p.getName() + " - Código: " + p.getCodigo() + " - Valor: R$ " + p.getValor());
+        }
+    }
+
+    // Método para calcular o valor total da compra
     public float getValorTotal() {
-        return valorTotal;
+        float total = 0;
+        for (Produto p : produtos) {
+            total += p.getValor();
+        }
+        return total;
     }
 }

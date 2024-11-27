@@ -1,47 +1,42 @@
-import java.util.ArrayList;
-
 public class Mercado {
     private Terminal terminal;
     private ProdutosList produtoList;
-    private float saldo; // Saldo do caixa
-    private ArrayList<Float> TotalCaixa; // Lista para armazenar o total das compras realizadas
+    private float saldo;
+    private TotalCaixa totalCaixa;  // Usando TotalCaixa em vez de ArrayList<Float>
 
     public Mercado() {
         terminal = new Terminal();
         produtoList = new ProdutosList();
-        saldo = 200.00f; // Saldo inicial de 200,00
-        TotalCaixa = new ArrayList<>();
+        saldo = 200.00f; // Saldo inicial
+        totalCaixa = new TotalCaixa();  // Inicializando a classe TotalCaixa
     }
 
     public void startSimulation() {
-        // Inicializa produtos na loja
+        // Inicializa produtos
         produtoList.addProduto(ProdutoFactory.tipodeProduto(1, "Bolacha Rancheiro", 1, 10.50f, "45 dias", null, null));
         produtoList.addProduto(ProdutoFactory.tipodeProduto(2, "Colher", 2, 5.20f, null, "360 dias", null));
         produtoList.addProduto(ProdutoFactory.tipodeProduto(3, "Sanduicheira", 3, 120.75f, null, null, "2 anos"));
-        
+
         loop();
     }
 
     private void loop() {
-        Compra compra = new Compra();
         int opcao = -1;
         while (opcao != 4) {
             opcao = terminal.showMainMenu();
             switch (opcao) {
                 case 1:
-                    produtoList.printProduto(); // Exibe estoque
+                    showEstoque();
                     break;
                 case 2:
-                    showComprar(compra); // Abre o processo de compra
+                    Compra compra = new Compra();
+                    showComprar(compra);
                     break;
                 case 3:
-                    // Aqui você pode adicionar funcionalidades financeiras
+                    showFinanceiro();
                     break;
                 case 4:
                     System.out.println("Saindo...");
-                    break;
-                case 5: // Nova opção para fechar caixa
-                    fecharCaixa();
                     break;
                 default:
                     System.out.println("Opção inválida.");
@@ -50,63 +45,182 @@ public class Mercado {
         }
     }
 
-    private void showComprar(Compra compra) {
-        boolean continuarCompra = true;
-        while (continuarCompra) {
-            int codigoProduto = Console.readNumber("Digite o código do produto (ou 0 para finalizar): ");
-            if (codigoProduto == 0) {
-                continuarCompra = false;
-                System.out.println("Compra finalizada!");
+    private void showEstoque() {
+        int opcao;
+        do {
+            System.out.println("\n--- Estoque ---");
+            System.out.println("1 - Exibir produtos");
+            System.out.println("2 - Adicionar produto");
+            System.out.println("3 - Voltar");
+            opcao = Console.readNumber("Escolha uma opção: ");
+
+            switch (opcao) {
+                case 1:
+                    produtoList.printProduto();
+                    break;
+                case 2:
+                    adicionarProduto();
+                    break;
+                case 3:
+                    System.out.println("Voltando...");
+                    break;
+                default:
+                    System.out.println("Opção inválida.");
+                    break;
+            }
+        } while (opcao != 3);
+    }
+
+    private void adicionarProduto() {
+        int tipo = Console.readNumber("Tipo de produto: 1 - Alimento, 2 - Utensílio, 3 - Eletroeletrônico: ");
+        String nome = Console.readString("Nome: ");
+        int codigo = Console.readNumber("Código: ");
+        float valor = Console.readFloat("Valor: ");
+
+        Produto novoProduto;
+        switch (tipo) {
+            case 1:
+                String validadeAlimento = Console.readString("Validade do alimento: ");
+                novoProduto = new Alimento(nome, codigo, valor, validadeAlimento);
+                break;
+            case 2:
+                String validadeUtensilio = Console.readString("Validade do utensílio: ");
+                novoProduto = new Utensilios(nome, codigo, valor, validadeUtensilio);
+                break;
+            case 3:
+                String garantia = Console.readString("Garantia: ");
+                novoProduto = new Eletroeletronicos(nome, codigo, valor, garantia);
+                break;
+            default:
+                System.out.println("Tipo inválido.");
+                return;
+        }
+
+        produtoList.addProduto(novoProduto);
+        System.out.println("Produto adicionado com sucesso!");
+    }
+    
+    private void pesquisarProduto() {
+        int opcaoPesquisa = Console.readNumber("Escolha o tipo de pesquisa: 1 - Código, 2 - Nome: ");
+        Produto produto = null;
+        
+        if (opcaoPesquisa == 1) {
+            int codigo = Console.readNumber("Digite o código do produto: ");
+            produto = produtoList.getProdutoPorCodigo(codigo);
+        } else if (opcaoPesquisa == 2) {
+            String nome = Console.readString("Digite o nome do produto: ");
+            produto = produtoList.getProdutoPorNome(nome);
+        } else {
+            System.out.println("Opção inválida.");
+            return;
+        }
+
+        // Verificar se o produto foi encontrado
+        if (produto != null) {
+            System.out.println("\nProduto encontrado:");
+            System.out.println("Nome: " + produto.getName());
+            
+            // Verificar o tipo do produto e exibir a validade/garantia correspondente
+            if (produto instanceof Alimento) {
+                System.out.println("Validade: " + ((Alimento) produto).getValidade());
+            } else if (produto instanceof Utensilios) {
+                System.out.println("Validade: " + ((Utensilios) produto).getValidade());
+            } else if (produto instanceof Eletroeletronicos) {
+                System.out.println("Garantia: " + ((Eletroeletronicos) produto).getGarantia());
             } else {
-                Produto produto = produtoList.getProdutoPorCodigo(codigoProduto);
+                System.out.println("Produto sem validade ou garantia.");
+            }
+        } else {
+            System.out.println("Produto não encontrado.");
+        }
+    }
+
+
+    private void showComprar(Compra compra) {
+        boolean continuar = true;
+        while (continuar) {
+            int codigo = Console.readNumber("Código do produto (ou 0 para finalizar, 5 para remover um item): ");
+            if (codigo == 0) {
+                continuar = false;
+                System.out.println("Compra finalizada.");
+            } else if (codigo == 5) {
+                // Remover um item do carrinho
+                int produtoRemover = Console.readNumber("Digite o código do produto a remover do carrinho: ");
+                Produto produto = compra.getProdutoPorCodigo(produtoRemover); // Método para buscar produto no carrinho
+                if (produto != null) {
+                    compra.removerProduto(produto);  // Remover o produto
+                    System.out.println(produto.getName() + " removido do carrinho.");
+                } else {
+                    System.out.println("Produto não encontrado no carrinho.");
+                }
+            } else {
+                Produto produto = produtoList.getProdutoPorCodigo(codigo);
                 if (produto != null) {
                     compra.addProduto(produto);
-                    System.out.println("Produto " + produto.name + " adicionado à compra.");
+                    System.out.println(produto.getName() + " adicionado.");
                 } else {
                     System.out.println("Produto não encontrado.");
                 }
             }
-            compra.mostrarCompra();
-            
-            if (continuarCompra) {
-                int opcao = Console.readNumber("Deseja adicionar outro produto? (1 - Sim / 2 - Não): ");
-                if (opcao == 2) {
-                    continuarCompra = false;
-                    System.out.println("Compra finalizada!");
-                }
-            }
         }
-
         finalizarCompra(compra);
     }
 
+
     private void finalizarCompra(Compra compra) {
-        System.out.println("Resumo da Compra:");
         compra.mostrarCompra();
-        float valorTotal = compra.getValorTotal();
-        System.out.println("Valor total da compra: R$ " + valorTotal);
-        TotalCaixa.add(valorTotal); // Adiciona o valor da compra à lista TotalCaixa
-        saldo += valorTotal; // Atualiza o saldo do caixa
-        System.out.println("Novo saldo do caixa: R$ " + saldo);
+        float total = compra.getValorTotal();
+        totalCaixa.adicionarCompra(total);  // Usando TotalCaixa para adicionar o total da compra
+        saldo += total;
+        System.out.println("Saldo atualizado: R$ " + saldo);
     }
 
-    // Método para fechar o caixa
+    private void showFinanceiro() {
+        int opcao;
+        do {
+            System.out.println("\n--- Menu Financeiro ---");
+            System.out.println("1 - Pesquisar produto");
+            System.out.println("2 - Fechar caixa");
+            System.out.println("3 - Voltar");
+            opcao = Console.readNumber("Escolha uma opção: ");
+
+            switch (opcao) {
+                case 1:
+                    pesquisarProduto(); // Chama o método de pesquisa
+                    break;
+                case 2:
+                    fecharCaixa(); // Fecha o caixa
+                    break;
+                case 3:
+                    System.out.println("Voltando ao menu principal...");
+                    break;
+                default:
+                    System.out.println("Opção inválida.");
+                    break;
+            }
+        } while (opcao != 3);
+    }
+
     private void fecharCaixa() {
-        float totalCompras = 0;
-        // Soma o total das compras
-        for (float valor : TotalCaixa) {
-            totalCompras += valor;
-        }
+        // Exibe o total acumulado no caixa
+        totalCaixa.exibirTotal();  // Exibe o total das vendas registradas
         
-        // Calcula a diferença entre o total das compras e o valor inicial de 200
-        float valorSaque = totalCompras - 200;
-        System.out.println("Valor total das compras: R$ " + totalCompras);
-        System.out.println("Valor a ser sacado (total - R$ 200): R$ " + valorSaque);
+        // Calcula o valor total das vendas líquidas
+        float totalVendasLiquidas = totalCaixa.calcularTotal() - 200;
         
-        saldo = 200; // Deixa o saldo do caixa com R$ 200,00 após o fechamento
-        TotalCaixa.clear(); // Limpa a lista de compras realizadas
+        // Exibe a mensagem com o valor das vendas líquidas e o valor que ficará no caixa
+        System.out.println("Total de vendas líquidas: R$ " + totalVendasLiquidas);
+        
+        // Exibe o valor que ficará no caixa (vendas líquidas + R$ 200 de saldo inicial)
+        float valorNoCaixa = totalVendasLiquidas + 200;
+        System.out.println("Valor que ficará no caixa: R$ " + valorNoCaixa);
+        
+        // Limpa os valores do caixa após fechar o dia
+        totalCaixa.limpar();  // Limpa a lista após fechar o caixa
     }
 
+    
+    
     public static void main(String[] args) {
         Mercado mercado = new Mercado();
         mercado.startSimulation();
